@@ -95,7 +95,7 @@ model QuizAttempt {
   quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   score     Int
   totalQuestions Int
-  answers   String   // JSON string of user answers
+  answers   String   @db.Text // JSON string of user answers
   completedAt DateTime @default(now())
   details   AttemptAnswer[]
 }
