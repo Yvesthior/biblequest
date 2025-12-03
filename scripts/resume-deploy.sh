@@ -33,8 +33,9 @@ NEW_DB_PASS=$(openssl rand -hex 16)
 
 # 2. Mise à jour du mot de passe dans MySQL
 echo -e "${BLUE}🔄 Mise à jour de l'utilisateur MySQL '${DB_USER}'...${NC}"
-mysql -u root -e "ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${NEW_DB_PASS}';"
-mysql -u root -e "FLUSH PRIVILEGES;"
+# Utilisation du mot de passe root connu pour cette session
+mysql -u root -p"o604BHE+CLgppPCRBzK+ag==" -e "ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${NEW_DB_PASS}';"
+mysql -u root -p"o604BHE+CLgppPCRBzK+ag==" -e "FLUSH PRIVILEGES;"
 
 # 3. Reconstruction de l'URL de connexion
 DATABASE_URL="mysql://${DB_USER}:${NEW_DB_PASS}@localhost:3306/${DB_NAME}"
