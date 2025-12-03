@@ -1,0 +1,44 @@
+[
+  {
+    "quiz_title": "Quiz sur les Paraboles",
+    "quiz_description": "Testez vos connaissances sur les paraboles de Jésus",
+    "quiz_category": "Nouveau Testament",
+    "quiz_difficulty": "Moyen",
+    "question_text": "Quelle est la parabole du semeur ?",
+    "option_1": "Le semeur sème la parole de Dieu",
+    "option_2": "Le semeur plante des graines dans son jardin",
+    "option_3": "Le semeur raconte une histoire",
+    "option_4": "Le semeur enseigne aux disciples",
+    "correct_option_index": 1,
+    "explanation": "La parabole du semeur illustre comment la parole de Dieu est reçue différemment selon les cœurs des auditeurs.",
+    "reference": "Matthieu 13:3-9"
+  },
+  {
+    "quiz_title": "Quiz sur les Paraboles",
+    "quiz_description": "Testez vos connaissances sur les paraboles de Jésus",
+    "quiz_category": "Nouveau Testament",
+    "quiz_difficulty": "Moyen",
+    "question_text": "Que représente la graine de moutarde dans la parabole de Jésus ?",
+    "option_1": "La foi",
+    "option_2": "Le royaume de Dieu",
+    "option_3": "L'amour",
+    "option_4": "L'espérance",
+    "correct_option_index": 2,
+    "explanation": "Jésus compare le royaume de Dieu à une graine de moutarde qui devient un grand arbre.",
+    "reference": "Matthieu 13:31-32"
+  },
+  {
+    "quiz_title": "Quiz sur l'Ancien Testament",
+    "quiz_description": "Questions sur l'Ancien Testament",
+    "quiz_category": "Ancien Testament",
+    "quiz_difficulty": "Facile",
+    "question_text": "Qui a construit l'arche ?",
+    "option_1": "Noé",
+    "option_2": "Moïse",
+    "option_3": "Abraham",
+    "option_4": "David",
+    "correct_option_index": 1,
+    "explanation": "Noé a construit l'arche selon les instructions de Dieu pour sauver sa famille et les animaux du déluge.",
+    "reference": "Genèse 6:14-16"
+  }
+]
