@@ -158,7 +158,8 @@ echo -e "${GREEN}✅ Fichier .env créé.${NC}"
 # Prisma et Build
 echo -e "${BLUE}🛠️ Exécution de Prisma et Build...${NC}"
 npx prisma generate
-npx prisma migrate deploy
+# On utilise db push pour la première mise en prod pour éviter les conflits d'historique de migration
+npx prisma db push
 npm run build
 
 # 9. Configuration PM2
