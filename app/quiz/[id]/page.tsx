@@ -183,7 +183,7 @@ export default function QuizPage() {
   const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 pb-20 overflow-x-hidden">
       {/* Mobile-first header with glassmorphism */}
       <div className="sticky top-0 z-50 glass-strong border-b border-border/50">
         <div className="container mx-auto px-4 py-4">
@@ -258,28 +258,30 @@ export default function QuizPage() {
             variant="outline"
             size="lg"
             disabled={currentQuestionIndex === 0}
-            className="flex-1 glass border-border/50"
+            className="w-12 h-12 p-0 rounded-full glass border-border/50 flex-shrink-0"
+            aria-label="Question précédente"
           >
-            <ChevronLeft className="h-5 w-5 mr-2" />
-            Précédent
+            <ChevronLeft className="h-6 w-6" />
           </Button>
 
-          {/* Progress dots */}
-          <div className="flex gap-1.5 px-2">
-            {quiz.questions.map((q, index) => (
-              <div
-                key={index}
-                className={`
-                  w-2 h-2 rounded-full transition-all duration-200
-                  ${answers[q.id] !== undefined
-                    ? "bg-primary w-6"
-                    : index === currentQuestionIndex
-                    ? "bg-primary/50 w-4"
-                    : "bg-muted w-2"
-                  }
-                `}
-              />
-            ))}
+          {/* Progress dots - scrollable on very small screens */}
+          <div className="flex-1 flex justify-center overflow-hidden">
+            <div className="flex gap-1.5 px-2 overflow-x-auto no-scrollbar py-2 max-w-full justify-start sm:justify-center">
+              {quiz.questions.map((q, index) => (
+                <div
+                  key={index}
+                  className={`
+                    h-2 rounded-full transition-all duration-300 flex-shrink-0
+                    ${answers[q.id] !== undefined
+                      ? "bg-primary w-6"
+                      : index === currentQuestionIndex
+                      ? "bg-primary/50 w-4"
+                      : "bg-muted w-2"
+                    }
+                  `}
+                />
+              ))}
+            </div>
           </div>
 
           {isLastQuestion ? (
@@ -287,15 +289,12 @@ export default function QuizPage() {
               onClick={handleSubmit}
               disabled={!allQuestionsAnswered || submitting || status !== "authenticated"}
               size="lg"
-              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 rounded-full px-6"
             >
               {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Envoi...
-                </>
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                "Soumettre"
+                <span className="font-bold">Finir</span>
               )}
             </Button>
           ) : (
@@ -303,10 +302,10 @@ export default function QuizPage() {
               onClick={handleNext}
               disabled={selectedOption === undefined}
               size="lg"
-              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30"
+              className="w-12 h-12 p-0 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30 flex-shrink-0"
+              aria-label="Question suivante"
             >
-              Suivant
-              <ChevronRight className="h-5 w-5 ml-2" />
+              <ChevronRight className="h-6 w-6" />
             </Button>
           )}
         </div>
