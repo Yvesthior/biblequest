@@ -1,52 +1,35 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
-import { z } from 'zod';
+import { CreateFeedbackDto } from '@/shared/dto';
+import { AppError } from '@/shared/errors/AppError';
+import { quizRepository } from '@/shared/repositories/QuizRepository';
+import { withErrorHandler, requireAuth } from '@/shared/errors/errorHandler';
 
-const feedbackSchema = z.object({
-  quizId: z.number().int().positive(),
-  reportedQuestionIds: z.array(z.number().int().positive()).min(1, "Au moins une question doit être sélectionnée."),
-  message: z.string().min(10, "Votre message doit contenir au moins 10 caractères."),
-});
-
-export async function POST(request: Request) {
+async function handler(request: Request) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
+  const userId = requireAuth(session);
+
+  const body = await request.json();
+  const { quizId, reportedQuestionIds, message } = CreateFeedbackDto.parse(body);
+
+  // Vérifier que le quiz existe
+  const quizExists = await quizRepository.exists(quizId);
+  if (!quizExists) {
+    throw AppError.notFound("Quiz");
   }
 
-  try {
-    const body = await request.json();
-    const validation = feedbackSchema.safeParse(body);
+  // Créer le feedback
+  const newFeedback = await prisma.feedback.create({
+    data: {
+      quizId,
+      message,
+      userId,
+      reportedQuestionIdsJson: JSON.stringify(reportedQuestionIds),
+    },
+  });
 
-    if (!validation.success) {
-      return NextResponse.json({ error: "Validation échouée", details: validation.error.flatten() }, { status: 400 });
-    }
-
-    const { quizId, reportedQuestionIds, message } = validation.data;
-
-    // Vérifier que le quiz existe
-    const quizExists = await prisma.quiz.findUnique({
-      where: { id: quizId },
-    });
-
-    if (!quizExists) {
-      return NextResponse.json({ error: "Le quiz spécifié n'existe pas." }, { status: 404 });
-    }
-
-    const newFeedback = await prisma.feedback.create({
-      data: {
-        quizId,
-        message,
-        userId: session.user.id,
-        reportedQuestionIdsJson: JSON.stringify(reportedQuestionIds),
-      },
-    });
-
-    return NextResponse.json(newFeedback, { status: 201 });
-
-  } catch (error) {
-    console.error("Erreur lors de la création du signalement:", error);
-    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
-  }
+  return NextResponse.json(newFeedback, { status: 201 });
 }
+
+export const POST = withErrorHandler(handler)

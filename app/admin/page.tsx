@@ -1,5 +1,8 @@
 import { getCurrentUser } from "@/lib/get-user"
 import { prisma } from "@/lib/prisma"
+
+export const dynamic = "force-dynamic"
+
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -210,9 +213,9 @@ export default async function AdminPage() {
                           </Badge>
                         )}
                         {quiz.difficulty && (
-                          <Badge 
-                            variant={quiz.difficulty === "Facile" ? "default" : 
-                                   quiz.difficulty === "Moyen" ? "secondary" : "destructive"}
+                          <Badge
+                            variant={quiz.difficulty === "Facile" ? "default" :
+                              quiz.difficulty === "Moyen" ? "secondary" : "destructive"}
                             className="text-xs"
                           >
                             {quiz.difficulty}
