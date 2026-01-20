@@ -1,24 +1,9 @@
-// import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@prisma/client"
 
-// const globalForPrisma = globalThis as unknown as {
-//   prisma: PrismaClient | undefined
-// }
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
 
-// export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+export const prisma = globalForPrisma.prisma ?? new PrismaClient()
 
-// if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
-
-import "dotenv/config";
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
-import { PrismaClient } from '../node_modules/.prisma/client';
-
-const adapter = new PrismaMariaDb({
-  host: process.env.DATABASE_HOST,
-  user: process.env.DATABASE_USER,
-  password: process.env.DATABASE_PASSWORD,
-  database: process.env.DATABASE_NAME,
-  connectionLimit: 5
-});
-const prisma = new PrismaClient({ adapter });
-
-export { prisma }
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
