@@ -225,7 +225,7 @@ export default async function ProfilePage() {
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {recentAttempts.map((attempt) => {
+                  {recentAttempts.map((attempt: any) => {
                     const scorePercentage = Math.round((attempt.score / attempt.totalQuestions) * 100)
                     return (
                       <div key={attempt.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">

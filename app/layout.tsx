@@ -4,7 +4,7 @@ import { Crimson_Text, Inter } from "next/font/google"
 import { GoogleAnalytics } from "@next/third-parties/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Providers } from "@/components/providers"
-import { Header } from "@/components/header"
+import { AppShell } from "@/components/layout/app-shell"
 import "./globals.css"
 import { Suspense } from "react"
 
@@ -34,13 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <div className="min-h-screen flex flex-col bg-background">
             <Suspense fallback={<div>Loading...</div>}>
-              <Header />
-              <main className="flex-1">{children}</main>
-              <footer className="border-t border-border/50 py-6 mt-12 glass">
-                <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-                  <p>BibleQuest © 2025 - Maîtrisez la Bible Quiz par Quiz</p>
-                </div>
-              </footer>
+              <AppShell>{children}</AppShell>
             </Suspense>
           </div>
         </Providers>

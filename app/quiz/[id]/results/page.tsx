@@ -214,7 +214,7 @@ export default function ResultsPage() {
               <TwitterShareButton url={shareUrl} title={shareMessage}>
                 <TwitterIcon size={40} round />
               </TwitterShareButton>
-              <FacebookShareButton url={shareUrl} quote={shareMessage}>
+              <FacebookShareButton url={shareUrl} title={shareMessage}>
                 <FacebookIcon size={40} round />
               </FacebookShareButton>
               <WhatsappShareButton url={shareUrl} title={shareMessage}>
@@ -232,8 +232,8 @@ export default function ResultsPage() {
             <div
               key={question.questionId}
               className={`glass-card rounded-3xl p-5 md:p-6 border-l-4 ${question.isCorrect
-                  ? "border-l-primary bg-primary/5"
-                  : "border-l-destructive bg-destructive/5"
+                ? "border-l-primary bg-primary/5"
+                : "border-l-destructive bg-destructive/5"
                 }`}
             >
               <div className="flex items-start gap-3 mb-4">
@@ -288,10 +288,10 @@ export default function ResultsPage() {
                       <div
                         key={optionIndex}
                         className={`p-4 rounded-2xl border-2 transition-all ${isCorrectAnswer
-                            ? "border-primary bg-primary/10"
-                            : isUserAnswer
-                              ? "border-destructive bg-destructive/10"
-                              : "border-border/50 bg-background/50"
+                          ? "border-primary bg-primary/10"
+                          : isUserAnswer
+                            ? "border-destructive bg-destructive/10"
+                            : "border-border/50 bg-background/50"
                           }`}
                       >
                         <div className="flex items-center gap-3">

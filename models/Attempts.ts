@@ -55,7 +55,7 @@ QuizAttempt.init({
 });
 
 QuizAttempt.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE' });
-QuizAttempt.belongsTo(Quiz, { foreignKey: 'quizId', onDelete: 'CASCADE' });
+QuizAttempt.belongsTo(Quiz, { foreignKey: 'quizId', as: 'quiz', onDelete: 'CASCADE' });
 User.hasMany(QuizAttempt, { foreignKey: 'userId', as: 'quizAttempts' });
 Quiz.hasMany(QuizAttempt, { foreignKey: 'quizId', as: 'quizAttempts' });
 

@@ -125,7 +125,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
         {user && attempts.length > 0 && (
           <QuizHistory
             attempts={attempts}
-            questions={quiz.questions.map(q => ({
+            questions={quiz.questions.map((q: any) => ({
               ...q,
               options: q.options as string[], // Type assertion for Prisma JSON
             }))}
