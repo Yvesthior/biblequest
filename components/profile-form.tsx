@@ -34,7 +34,7 @@ interface ProfileFormProps {
   initialData: {
     id: string
     name: string | null
-    username: string | null
+    username?: string | null
     email: string
   }
 }
