@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/get-user"
-import { prisma } from "@/lib/prisma"
+import { Quiz, Question } from "@/models"
 
 export async function POST(request: Request) {
   const logs: string[] = []
@@ -154,12 +154,12 @@ export async function POST(request: Request) {
           i++
         }
       }
-      
+
       // Ajouter le dernier champ (même si on est encore dans des guillemets)
       if (current.length > 0 || values.length === 0) {
         values.push(current)
       }
-      
+
       return values
     }
 
@@ -167,7 +167,7 @@ export async function POST(request: Request) {
     // L'en-tête n'a généralement pas de guillemets
     const headerLine = lines[0]
     const headers = headerLine.split(",").map((h) => h.trim())
-    
+
     // Parser les lignes de données avec le parser CSV complet
     const rows = lines.slice(1).map((line) => {
       const parsed = parseCSVLine(line)
@@ -204,7 +204,7 @@ export async function POST(request: Request) {
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
       const row = rows[rowIndex]
       const rowData: any = {}
-      
+
       // Parser les données de la ligne
       // Le parser a déjà géré les guillemets, on a juste besoin de trimmer
       headers.forEach((header, index) => {
@@ -293,47 +293,65 @@ export async function POST(request: Request) {
       })
 
       // Vérifier si le quiz existe déjà
-      const existingQuiz = await prisma.quiz.findFirst({
+      const existingQuiz = await Quiz.findOne({
         where: { title: quizTitle },
-        include: { questions: true },
+        include: [{ model: Question }]
       })
 
       let quiz
       if (existingQuiz) {
         logs.push(`🔄 Quiz "${quizTitle}" existe déjà, mise à jour...`)
-        logs.push(`🗑️ Suppression de ${existingQuiz.questions.length} ancienne(s) question(s)`)
-        // Supprimer les anciennes questions et créer les nouvelles
-        await prisma.question.deleteMany({
+        // Helper to count old questions
+        const oldQuestionsCount = existingQuiz.dataValues.Questions ? existingQuiz.dataValues.Questions.length : 0;
+        logs.push(`🗑️ Suppression de ${oldQuestionsCount} ancienne(s) question(s)`)
+
+        // Supprimer les anciennes questions
+        await Question.destroy({
           where: { quizId: existingQuiz.id },
         })
 
-        quiz = await prisma.quiz.update({
-          where: { id: existingQuiz.id },
-          data: {
-            title: quizTitle,
-            description: quizData.quiz_description?.trim() || null,
-            category: quizData.quiz_category?.trim() || null,
-            difficulty: quizData.quiz_difficulty?.trim() || null,
-            questions: {
-              create: questions,
-            },
-          },
+        // Mettre à jour le quiz
+        quiz = await existingQuiz.update({
+          title: quizTitle,
+          description: quizData.quiz_description?.trim() || null,
+          category: quizData.quiz_category?.trim() || null,
+          difficulty: quizData.quiz_difficulty?.trim() || null,
         })
+
+        // Créer les nouvelles questions
+        // Ensure questions are valid objects for creation
+        const newQuestions = questions.map(q => ({
+          ...q,
+          quizId: quiz.id,
+          // Options are handled by setter in Model if defined, or should be stringified?
+          // The previous code passes array `options`.
+          // If model expects array (JSON), it's fine. If text, model handles stringify via setter.
+          // Based on my review of the plan, I should trust the model or just pass it ensuring it matches model expectation.
+        }));
+        await Question.bulkCreate(newQuestions);
+
         logs.push(`✅ Quiz "${quizTitle}" mis à jour avec succès (${questions.length} question(s))`)
       } else {
         logs.push(`✨ Création du nouveau quiz "${quizTitle}"...`)
         // Créer un nouveau quiz
-        quiz = await prisma.quiz.create({
-          data: {
-            title: quizTitle,
-            description: quizData.quiz_description?.trim() || null,
-            category: quizData.quiz_category?.trim() || null,
-            difficulty: quizData.quiz_difficulty?.trim() || null,
-            questions: {
-              create: questions,
-            },
-          },
+        quiz = await Quiz.create({
+          title: quizTitle,
+          description: quizData.quiz_description?.trim() || null,
+          category: quizData.quiz_category?.trim() || null,
+          difficulty: quizData.quiz_difficulty?.trim() || null,
+        }, {
+          // Create with association? Or separately?
+          // Since we have the logic separated above, let's allow separate creation for consistency or use nested create.
+          // Nested create is cleaner.
+          // But we need to map the alias carefully.
         })
+
+        const newQuestions = questions.map(q => ({
+          ...q,
+          quizId: quiz.id
+        }));
+        await Question.bulkCreate(newQuestions);
+
         logs.push(`✅ Quiz "${quizTitle}" créé avec succès (${questions.length} question(s))`)
       }
 

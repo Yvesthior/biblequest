@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/get-user"
-import { prisma } from "@/lib/prisma"
+import { Quiz } from "@/models"
+import { Sequelize } from "sequelize"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,14 +9,39 @@ import { BookOpen, Plus, Edit, Trash2, Eye } from "lucide-react"
 import Link from "next/link"
 
 async function getQuizzes() {
-  return await prisma.quiz.findMany({
-    include: {
-      _count: {
-        select: { questions: true, attempts: true }
-      }
+  const quizzes = await Quiz.findAll({
+    attributes: {
+      include: [
+        [
+          Sequelize.literal(`(
+            SELECT COUNT(*)
+            FROM question AS questions
+            WHERE questions.quizId = Quiz.id
+          )`),
+          'questionsCount'
+        ],
+        [
+          Sequelize.literal(`(
+            SELECT COUNT(*)
+            FROM quiz_attempt AS attempts
+            WHERE attempts.quizId = Quiz.id
+          )`),
+          'attemptsCount'
+        ]
+      ]
     },
-    orderBy: {
-      createdAt: "desc"
+    order: [['createdAt', 'DESC']]
+  })
+
+  // Transform to match expected structure
+  return quizzes.map(q => {
+    const json = q.toJSON();
+    return {
+      ...json,
+      _count: {
+        questions: (q.get('questionsCount') as number) || 0,
+        attempts: (q.get('attemptsCount') as number) || 0
+      }
     }
   })
 }
@@ -94,9 +120,9 @@ export default async function AdminQuizzesPage() {
                           </Badge>
                         )}
                         {quiz.difficulty && (
-                          <Badge 
-                            variant={quiz.difficulty === "Facile" ? "default" : 
-                                   quiz.difficulty === "Moyen" ? "secondary" : "destructive"}
+                          <Badge
+                            variant={quiz.difficulty === "Facile" ? "default" :
+                              quiz.difficulty === "Moyen" ? "secondary" : "destructive"}
                             className="text-xs"
                           >
                             {quiz.difficulty}
@@ -110,7 +136,7 @@ export default async function AdminQuizzesPage() {
                       <span>{quiz._count.questions} questions</span>
                       <span>{quiz._count.attempts} tentatives</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Button asChild variant="outline" size="sm" className="flex-1">
                         <Link href={`/quiz/${quiz.id}`}>

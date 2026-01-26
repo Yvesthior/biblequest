@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/get-user"
-import { prisma } from "@/lib/prisma"
+import { Quiz, User, QuizAttempt } from "@/models"
+import { Sequelize } from "sequelize"
 
 export const dynamic = "force-dynamic"
 
@@ -12,25 +13,51 @@ import Link from "next/link"
 
 async function getAdminStats() {
   const [totalQuizzes, totalUsers, totalAttempts, recentQuizzes] = await Promise.all([
-    prisma.quiz.count(),
-    prisma.user.count(),
-    prisma.quizAttempt.count(),
-    prisma.quiz.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      include: {
-        _count: {
-          select: { questions: true, attempts: true }
-        }
+    Quiz.count(),
+    User.count(),
+    QuizAttempt.count(),
+    Quiz.findAll({
+      limit: 5,
+      order: [['createdAt', 'DESC']],
+      attributes: {
+        include: [
+          [
+            Sequelize.literal(`(
+              SELECT COUNT(*)
+              FROM question AS questions
+              WHERE questions.quizId = Quiz.id
+            )`),
+            'questionsCount'
+          ],
+          [
+            Sequelize.literal(`(
+              SELECT COUNT(*)
+              FROM quiz_attempt AS attempts
+              WHERE attempts.quizId = Quiz.id
+            )`),
+            'attemptsCount'
+          ]
+        ]
       }
     })
   ])
+
+  const formattedRecentQuizzes = recentQuizzes.map(q => {
+    const json = q.toJSON();
+    return {
+      ...json,
+      _count: {
+        questions: (q.get('questionsCount') as number) || 0,
+        attempts: (q.get('attemptsCount') as number) || 0
+      }
+    }
+  })
 
   return {
     totalQuizzes,
     totalUsers,
     totalAttempts,
-    recentQuizzes
+    recentQuizzes: formattedRecentQuizzes
   }
 }
 

@@ -1,19 +1,21 @@
-import { prisma } from '@/lib/prisma';
+
 import { FeedbackForm } from '@/components/feedback-form';
 import { getCurrentUser } from '@/lib/get-user';
 import { redirect } from 'next/navigation';
 
+import { Quiz } from "@/models"
+
 async function getQuizzes() {
-  const quizzes = await prisma.quiz.findMany({
-    select: {
-      id: true,
-      title: true,
-    },
-    orderBy: {
-      title: 'asc',
-    },
+  const quizzes = await Quiz.findAll({
+    attributes: ['id', 'title'],
+    order: [['title', 'ASC']]
   });
-  return quizzes;
+
+  // Serialize for client component
+  return quizzes.map(q => ({
+    id: q.id,
+    title: q.title
+  }));
 }
 
 export default async function FeedbackPage() {

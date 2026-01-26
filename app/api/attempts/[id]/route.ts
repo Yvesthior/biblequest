@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { QuizAttempt, Quiz, Question } from "@/models"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -17,20 +17,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "ID de tentative invalide" }, { status: 400 })
     }
 
-    const attempt = await prisma.quizAttempt.findUnique({
-      where: { id: attemptId },
-      include: {
-        quiz: {
-          include: {
-            questions: true,
-          },
+    const attemptInstance = await QuizAttempt.findByPk(attemptId, {
+      include: [
+        {
+          model: Quiz,
+          include: [
+            {
+              model: Question,
+            },
+          ],
         },
-      },
+      ],
     })
 
-    if (!attempt) {
+    if (!attemptInstance) {
       return NextResponse.json({ error: "Tentative non trouvée" }, { status: 404 })
     }
+
+    const attempt = attemptInstance.toJSON() as any;
 
     // Verify ownership
     if (attempt.userId !== session.user.id) {
@@ -38,11 +42,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const storedAnswers = JSON.parse(attempt.answers)
-    
+
     // Determine if it's the old format (number[]) or new format (AnswerSubmission[])
     const isLegacyFormat = Array.isArray(storedAnswers) && typeof storedAnswers[0] === 'number'
 
-    const results = attempt.quiz.questions.map((question, index) => {
+    const quizQuestions = attempt.Quiz?.Questions || [];
+
+    const results = quizQuestions.map((question: any, index: number) => {
       let userAnswer = -1
 
       if (isLegacyFormat) {
@@ -73,7 +79,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       score: attempt.score,
       totalQuestions: attempt.totalQuestions,
       completedAt: attempt.completedAt,
-      quizTitle: attempt.quiz.title,
+      quizTitle: attempt.Quiz?.title,
       results,
     })
   } catch (error) {

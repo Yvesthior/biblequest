@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/get-user"
-import { prisma } from "@/lib/prisma"
+import { User, QuizAttempt, Quiz } from "@/models"
 import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,44 +8,47 @@ import { BookOpen, Trophy, Target, Calendar, TrendingUp, Award, Star, UserPlus }
 import { ProfileForm } from "@/components/profile-form"
 
 async function getUserStats(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      quizAttempts: {
-        include: {
-          quiz: true,
-        },
-        orderBy: {
-          completedAt: "desc",
-        },
-      },
-    },
-  })
+  const user = await User.findByPk(userId, {
+    include: [{
+      model: QuizAttempt,
+      as: 'quizAttempts',
+      include: [{
+        model: Quiz,
+        as: 'quiz'
+      }]
+    }],
+    order: [
+      [{ model: QuizAttempt, as: 'quizAttempts' }, 'completedAt', 'DESC']
+    ]
+  });
 
   if (!user) return null
 
-  const attempts = user.quizAttempts
-  const totalAttempts = attempts.length
-  const totalQuestions = attempts.reduce((sum, attempt) => sum + attempt.totalQuestions, 0)
-  const totalCorrect = attempts.reduce((sum, attempt) => sum + attempt.score, 0)
-  const averageScore = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
-  const perfectScores = attempts.filter(a => a.score === a.totalQuestions).length
+  // Transform to plain object to avoid serialization issues
+  const userData = user.toJSON();
+  const attempts = userData.quizAttempts || [];
 
-  const uniqueQuizzes = new Set(attempts.map(attempt => attempt.quizId)).size
+  const totalAttempts = attempts.length
+  const totalQuestions = attempts.reduce((sum: number, attempt: any) => sum + attempt.totalQuestions, 0)
+  const totalCorrect = attempts.reduce((sum: number, attempt: any) => sum + attempt.score, 0)
+  const averageScore = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0
+  const perfectScores = attempts.filter((a: any) => a.score === a.totalQuestions).length
+
+  const uniqueQuizzes = new Set(attempts.map((attempt: any) => attempt.quizId)).size
 
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  
-  const recentAttemptsCount = attempts.filter(attempt => 
+
+  const recentAttemptsCount = attempts.filter((attempt: any) =>
     new Date(attempt.completedAt) >= sevenDaysAgo
   ).length
 
-  const bestScore = attempts.length > 0 ? Math.max(...attempts.map(attempt => 
+  const bestScore = attempts.length > 0 ? Math.max(...attempts.map((attempt: any) =>
     Math.round((attempt.score / attempt.totalQuestions) * 100)
   )) : 0
 
   return {
-    user,
+    user: userData,
     stats: {
       totalAttempts,
       totalQuestions,
@@ -174,14 +177,14 @@ export default async function ProfilePage() {
                 <div className="flex justify-between text-sm">
                   <span>Niveau Actuel</span>
                   <span className="font-medium">
-                    {stats.averageScore >= 90 ? "Expert" : 
-                     stats.averageScore >= 75 ? "Avancé" : 
-                     stats.averageScore >= 60 ? "Intermédiaire" : "Débutant"}
+                    {stats.averageScore >= 90 ? "Expert" :
+                      stats.averageScore >= 75 ? "Avancé" :
+                        stats.averageScore >= 60 ? "Intermédiaire" : "Débutant"}
                   </span>
                 </div>
                 <Progress value={stats.averageScore} className="h-2" />
               </div>
-              
+
               <div className="flex gap-2 flex-wrap">
                 {stats.averageScore >= 90 && (
                   <Badge variant="default" className="gap-1">
@@ -228,7 +231,7 @@ export default async function ProfilePage() {
                       <div key={attempt.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div>
                           <p className="font-medium">{attempt.quiz.title}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-muted-foreground" suppressHydrationWarning>
                             {new Date(attempt.completedAt).toLocaleDateString("fr-FR")}
                           </p>
                         </div>

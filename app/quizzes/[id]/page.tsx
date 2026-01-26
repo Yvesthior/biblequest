@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/get-user"
-import { prisma } from "@/lib/prisma"
+import { Quiz, QuizAttempt, Question } from "@/models"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, BookOpen, Trophy, ArrowLeft, PlayCircle } from "lucide-react"
@@ -20,33 +20,32 @@ export default async function QuizDetailsPage({ params }: PageProps) {
   }
 
   const user = await getCurrentUser()
-  
-  const quiz = await prisma.quiz.findUnique({
-    where: { id: quizId },
-    include: {
-      questions: true,
-      _count: {
-        select: { questions: true },
-      },
-    },
+
+  const quizInstance = await Quiz.findByPk(quizId, {
+    include: [{ model: Question }]
   })
 
-  if (!quiz) {
+  if (!quizInstance) {
     notFound()
   }
+
+  // Convert to JSON and add _count property for compatibility
+  const quiz = quizInstance.toJSON() as any;
+  quiz._count = { questions: quiz.Questions ? quiz.Questions.length : 0 };
+  quiz.questions = quiz.Questions || [];
+
 
   // Fetch attempts if user is logged in
   let attempts: any[] = []
   if (user) {
-    attempts = await prisma.quizAttempt.findMany({
+    const attemptsInstances = await QuizAttempt.findAll({
       where: {
         quizId: quizId,
         userId: user.id,
       },
-      orderBy: {
-        completedAt: "desc",
-      },
+      order: [['completedAt', 'DESC']],
     })
+    attempts = attemptsInstances.map(a => a.toJSON());
   }
 
   return (
@@ -65,7 +64,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <BookOpen className="h-32 w-32" />
           </div>
-          
+
           <div className="relative z-10">
             <div className="flex flex-wrap gap-3 mb-4">
               {quiz.category && (
@@ -79,8 +78,8 @@ export default async function QuizDetailsPage({ params }: PageProps) {
                     quiz.difficulty === "Facile"
                       ? "default"
                       : quiz.difficulty === "Moyen"
-                      ? "secondary"
-                      : "destructive"
+                        ? "secondary"
+                        : "destructive"
                   }
                   className="text-sm px-3 py-1"
                 >
@@ -95,7 +94,7 @@ export default async function QuizDetailsPage({ params }: PageProps) {
             <h1 className="text-4xl font-bold text-foreground mb-4 leading-tight">
               {quiz.title}
             </h1>
-            
+
             {quiz.description && (
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl leading-relaxed">
                 {quiz.description}
@@ -109,14 +108,14 @@ export default async function QuizDetailsPage({ params }: PageProps) {
                   {attempts.length > 0 ? "Refaire le Quiz" : "Commencer le Quiz"}
                 </Link>
               </Button>
-              
+
               {attempts.length > 0 && (
-                 <div className="flex items-center gap-2 px-6 py-3 rounded-xl bg-background/50 border border-border/50">
-                   <Trophy className="h-5 w-5 text-yellow-500" />
-                   <span className="font-medium">
-                     Meilleur score : {Math.max(...attempts.map(a => a.score))}/{quiz._count.questions}
-                   </span>
-                 </div>
+                <div className="flex items-center gap-2 px-6 py-3 rounded-xl bg-background/50 border border-border/50">
+                  <Trophy className="h-5 w-5 text-yellow-500" />
+                  <span className="font-medium">
+                    Meilleur score : {Math.max(...attempts.map(a => a.score))}/{quiz._count.questions}
+                  </span>
+                </div>
               )}
             </div>
           </div>
@@ -124,15 +123,15 @@ export default async function QuizDetailsPage({ params }: PageProps) {
 
         {/* History Section */}
         {user && attempts.length > 0 && (
-          <QuizHistory 
-            attempts={attempts} 
+          <QuizHistory
+            attempts={attempts}
             questions={quiz.questions.map(q => ({
               ...q,
               options: q.options as string[], // Type assertion for Prisma JSON
-            }))} 
+            }))}
           />
         )}
-        
+
         {/* Login Prompt */}
         {!user && (
           <div className="glass-card rounded-2xl p-6 text-center">

@@ -9,6 +9,12 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  webpack: (config) => {
+    config.ignoreWarnings = [
+      { module: /node_modules\/sequelize/ }
+    ];
+    return config;
+  },
 }
 
 export default nextConfig

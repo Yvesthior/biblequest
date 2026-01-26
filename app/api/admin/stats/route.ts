@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/get-user"
-import { prisma } from "@/lib/prisma"
+import { QuizAttempt, Quiz } from "@/models"
+import { Sequelize } from "sequelize"
 
 export async function GET() {
   try {
@@ -11,34 +12,49 @@ export async function GET() {
     }
 
     // 1. Global Stats
-    const totalAttempts = await prisma.quizAttempt.count()
-    const totalQuizzes = await prisma.quiz.count()
-    
+    const totalAttempts = await QuizAttempt.count()
+    const totalQuizzes = await Quiz.count()
+
     // Count unique users who have played
-    const uniquePlayers = await prisma.quizAttempt.groupBy({
-      by: ['userId'],
-    }).then(res => res.length)
+    // Sequelize distinct count
+    const uniquePlayers = await QuizAttempt.count({
+      distinct: true,
+      col: 'userId'
+    })
 
     // 2. Attempts by Category
-    // Prisma doesn't support deep relation grouping easily in one go, 
-    // so we might need a raw query or fetching quizzes and aggregating.
-    // Let's try a cleaner approach: Fetch all quizzes with their attempt counts
-    const quizzes = await prisma.quiz.findMany({
-      select: {
-        id: true,
-        title: true,
-        category: true,
-        _count: {
-          select: { attempts: true }
-        }
-      }
+    // We fetch all quizzes and group by category in JS, or aggregate in DB.
+    // Let's fetch quizzes with their attempt counts (Question: does QuizAttempt have a direct relation to Category? No, it's on Quiz).
+    // So we need: Select Category, Count(Attempts).
+    // This requires a join.
+    /*
+      SELECT Quiz.category, COUNT(QuizAttempt.id) 
+      FROM Quiz 
+      LEFT JOIN QuizAttempt ON Quiz.id = QuizAttempt.quizId 
+      GROUP BY Quiz.category
+    */
+    // Since Sequelize grouping with relations can be verbose, let's stick to the previous strategy:
+    // Fetch quizzes with counts and aggregate in memory (simpler migration).
+
+    const quizzes = await Quiz.findAll({
+      attributes: {
+        include: [
+          [Sequelize.literal(`(
+            SELECT COUNT(*) 
+            FROM quizattempt AS qa 
+            WHERE qa.quizId = Quiz.id
+          )`), 'attemptCount']
+        ]
+      },
+      raw: true, // simplified structure
     })
 
     // Aggregate by Category manually
     const categoryStats: Record<string, number> = {}
-    quizzes.forEach(quiz => {
+    quizzes.forEach((quiz: any) => {
       const cat = quiz.category || "Non classé"
-      categoryStats[cat] = (categoryStats[cat] || 0) + quiz._count.attempts
+      const count = parseInt(quiz.attemptCount || 0)
+      categoryStats[cat] = (categoryStats[cat] || 0) + count
     })
 
     const attemptsByCategory = Object.entries(categoryStats)
@@ -47,23 +63,20 @@ export async function GET() {
 
     // 3. Top 5 Popular Quizzes
     const topQuizzes = [...quizzes]
-      .sort((a, b) => b._count.attempts - a._count.attempts)
-      .slice(0, 5)
-      .map(q => ({
+      .map((q: any) => ({
         name: q.title,
-        attempts: q._count.attempts,
+        attempts: parseInt(q.attemptCount || 0),
         category: q.category
       }))
-
-    // 4. Recent Activity (Last 7 days) - Optional but nice
-    // For now, let's stick to the basics requested.
+      .sort((a, b) => b.attempts - a.attempts)
+      .slice(0, 5)
 
     return NextResponse.json({
       overview: {
         totalAttempts,
         totalQuizzes,
         uniquePlayers,
-        completionRate: totalAttempts > 0 ? Math.round((totalAttempts / (uniquePlayers || 1)) * 10) / 10 : 0 // Avg attempts per player
+        completionRate: totalAttempts > 0 ? Math.round((totalAttempts / (uniquePlayers || 1)) * 10) / 10 : 0
       },
       attemptsByCategory,
       topQuizzes

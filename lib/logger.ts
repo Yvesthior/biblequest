@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma"
+import { ErrorLog } from "@/models"
 
 interface LogErrorOptions {
   error: any
@@ -9,18 +9,16 @@ export async function logError({ error, context }: LogErrorOptions) {
   try {
     // Ensure we have a proper error message
     const message = error instanceof Error ? error.message : "An unknown error occurred"
-    
+
     // Ensure we have a stack trace if possible
     const stack = error instanceof Error ? error.stack : undefined
 
-    await prisma.errorLog.create({
-      data: {
-        message,
-        stack: stack,
-        route: context?.route,
-        // You could add more context here, like user ID, etc.
-        // context: JSON.stringify(context) 
-      },
+    await ErrorLog.create({
+      message,
+      stack,
+      route: context?.route,
+      // You could add more context here, like user ID, etc.
+      // context: JSON.stringify(context) 
     })
 
     console.log("✅ Error successfully logged to database.")

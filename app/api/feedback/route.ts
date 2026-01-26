@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { Feedback } from '@/models';
 import { auth } from '@/lib/auth';
 import { CreateFeedbackDto } from '@/shared/dto';
 import { AppError } from '@/shared/errors/AppError';
 import { quizRepository } from '@/shared/repositories/QuizRepository';
 import { withErrorHandler, requireAuth } from '@/shared/errors/errorHandler';
+import { randomUUID } from "crypto"
 
 async function handler(request: Request) {
   const session = await auth();
@@ -20,13 +21,12 @@ async function handler(request: Request) {
   }
 
   // Créer le feedback
-  const newFeedback = await prisma.feedback.create({
-    data: {
-      quizId,
-      message,
-      userId,
-      reportedQuestionIdsJson: JSON.stringify(reportedQuestionIds),
-    },
+  const newFeedback = await Feedback.create({
+    id: randomUUID(),
+    quizId,
+    message,
+    userId,
+    reportedQuestionIdsJson: JSON.stringify(reportedQuestionIds),
   });
 
   return NextResponse.json(newFeedback, { status: 201 });

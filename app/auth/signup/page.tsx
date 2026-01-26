@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,8 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,7 +76,7 @@ export default function SignUpPage() {
       if (result?.error) {
         setError("Inscription réussie, mais erreur de connexion. Veuillez vous connecter manuellement.")
       } else {
-        router.push("/")
+        router.push(callbackUrl)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur lors de l'inscription")
@@ -196,7 +198,7 @@ export default function SignUpPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Vous avez déjà un compte ?{" "}
-              <Link href="/auth/signin" className="text-primary hover:underline">
+              <Link href={`/auth/signin${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`} className="text-primary hover:underline">
                 Se connecter
               </Link>
             </p>

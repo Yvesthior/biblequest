@@ -1,14 +1,15 @@
 import NextAuth from "next-auth"
-import { PrismaAdapter } from "@auth/prisma-adapter"
+import SequelizeAdapter from "@auth/sequelize-adapter"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { prisma } from "@/lib/prisma"
+import sequelize from "@/lib/sequelize"
+import * as models from "@/models"
+import { User } from "@/models"
 import bcrypt from "bcryptjs"
-import type { Adapter } from "@auth/core/adapters"
 import { authConfig } from "./auth.config"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma) as Adapter,
+  adapter: SequelizeAdapter(sequelize, { models }),
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -21,7 +22,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
-        const user = await prisma.user.findUnique({
+        const user = await User.findOne({
           where: {
             email: credentials.email as string,
           },

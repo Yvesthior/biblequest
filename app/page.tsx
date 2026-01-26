@@ -1,32 +1,48 @@
 import Link from "next/link"
-import { prisma } from "@/lib/prisma"
+import { Quiz, Question, QuizAttempt } from "@/models"
+import { Op, Sequelize } from "sequelize"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BookOpen, ArrowRight, Sparkles, Trophy, Zap } from "lucide-react"
-import { getCurrentUser } from "@/lib/get-user" // Import getCurrentUser
+import { getCurrentUser } from "@/lib/get-user"
 
 async function getQuizzes(userId?: string) {
-  const quizzes = await prisma.quiz.findMany({
-    where: userId ? {
-      NOT: { // Negate the condition
-        attempts: { // Corrected from quizAttempts to attempts
-          some: { // Check if *some* attempt exists for this user
-            userId: userId,
-          },
-        },
-      },
-    } : {},
-    include: {
+  const whereClause = userId ? {
+    id: {
+      [Op.notIn]: Sequelize.literal(`(
+        SELECT quizId FROM quizattempt WHERE userId = '${userId}'
+      )`)
+    }
+  } : {};
+
+  const quizzes = await Quiz.findAll({
+    where: whereClause,
+    attributes: {
+      include: [
+        [Sequelize.fn("COUNT", Sequelize.col("Questions.id")), "questionCount"]
+      ]
+    },
+    include: [{
+      model: Question,
+      attributes: [],
+      duplicating: false,
+    }],
+    group: ['Quiz.id'],
+    limit: 6,
+    order: [['createdAt', 'DESC']],
+    subQuery: false // Important for limit/offset with group by
+  });
+
+  // Map Sequelize results to match the structure expected by the UI (simulating Prisma's _count)
+  return quizzes.map(q => {
+    const quiz = q.toJSON() as any;
+    return {
+      ...quiz,
       _count: {
-        select: { questions: true },
-      },
-    },
-    take: 6,
-    orderBy: {
-      createdAt: "desc",
-    },
-  })
-  return quizzes
+        questions: quiz.questionCount || 0
+      }
+    };
+  });
 }
 
 export default async function HomePage() {
@@ -42,15 +58,15 @@ export default async function HomePage() {
             <Sparkles className="h-5 w-5 text-primary" />
             <span className="text-sm font-semibold text-primary">Apprendre en s'amusant</span>
           </div>
-          
+
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
             Maîtrisez la Bible
             <br />
             <span className="text-primary">Quiz par Quiz</span>
           </h1>
-          
+
           <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-            Testez vos connaissances bibliques avec des quiz interactifs. 
+            Testez vos connaissances bibliques avec des quiz interactifs.
             Chaque question est accompagnée de références et d'explications détaillées.
           </p>
 
@@ -127,8 +143,8 @@ export default async function HomePage() {
                           quiz.difficulty === "Facile"
                             ? "default"
                             : quiz.difficulty === "Moyen"
-                            ? "secondary"
-                            : "destructive"
+                              ? "secondary"
+                              : "destructive"
                         }
                         className="text-xs"
                       >

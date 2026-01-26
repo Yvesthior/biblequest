@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { Question } from '@/models';
 import { auth } from '@/lib/auth';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
@@ -15,17 +15,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 
   try {
-    const questions = await prisma.question.findMany({
+    const questions = await Question.findAll({
       where: {
         quizId: quizId,
       },
-      select: {
-        id: true,
-        questionText: true,
-      },
-      orderBy: {
-        id: 'asc'
-      }
+      attributes: ['id', 'questionText'],
+      order: [['id', 'ASC']]
     });
 
     return NextResponse.json(questions);

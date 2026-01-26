@@ -147,33 +147,31 @@ export default function ResultsPage() {
           </div>
 
           <div className="mb-6">
-            <div className={`text-6xl md:text-7xl font-bold mb-3 ${
-              isPerfect ? "text-primary" : isGood ? "text-primary" : "text-destructive"
-            }`}>
+            <div className={`text-6xl md:text-7xl font-bold mb-3 ${isPerfect ? "text-primary" : isGood ? "text-primary" : "text-destructive"
+              }`}>
               {result.score}/{result.totalQuestions}
             </div>
             <div className="text-2xl font-semibold text-foreground mb-2">
               {percentage}%
             </div>
-            <Progress 
-              value={percentage} 
-              className={`h-4 mb-4 ${
-                isPerfect ? "[&>div]:bg-primary" : isGood ? "[&>div]:bg-primary" : "[&>div]:bg-destructive"
-              }`}
+            <Progress
+              value={percentage}
+              className={`h-4 mb-4 ${isPerfect ? "[&>div]:bg-primary" : isGood ? "[&>div]:bg-primary" : "[&>div]:bg-destructive"
+                }`}
             />
             <p className="text-sm text-muted-foreground">
-              {isPerfect 
-                ? "🎉 Parfait ! Excellent travail !" 
-                : isGood 
-                ? "👍 Bon score ! Continuez comme ça !" 
-                : "💪 Continuez à vous améliorer !"}
+              {isPerfect
+                ? "🎉 Parfait ! Excellent travail !"
+                : isGood
+                  ? "👍 Bon score ! Continuez comme ça !"
+                  : "💪 Continuez à vous améliorer !"}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button 
-              asChild 
-              variant="outline" 
+            <Button
+              asChild
+              variant="outline"
               size="lg"
               className="flex-1 glass border-border/50"
             >
@@ -182,10 +180,10 @@ export default function ResultsPage() {
                 Liste des Quiz
               </Link>
             </Button>
-            
-            <Button 
-              asChild 
-              variant="outline" 
+
+            <Button
+              asChild
+              variant="outline"
               size="lg"
               className="flex-1 glass border-border/50"
             >
@@ -195,8 +193,8 @@ export default function ResultsPage() {
               </Link>
             </Button>
 
-            <Button 
-              asChild 
+            <Button
+              asChild
               size="lg"
               className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/30"
             >
@@ -233,11 +231,10 @@ export default function ResultsPage() {
           {result.results.map((question, index) => (
             <div
               key={question.questionId}
-              className={`glass-card rounded-3xl p-5 md:p-6 border-l-4 ${
-                question.isCorrect 
-                  ? "border-l-primary bg-primary/5" 
+              className={`glass-card rounded-3xl p-5 md:p-6 border-l-4 ${question.isCorrect
+                  ? "border-l-primary bg-primary/5"
                   : "border-l-destructive bg-destructive/5"
-              }`}
+                }`}
             >
               <div className="flex items-start gap-3 mb-4">
                 {question.isCorrect ? (
@@ -271,37 +268,48 @@ export default function ResultsPage() {
               </div>
 
               <div className="space-y-2 mb-4">
-                {question.options.map((option, optionIndex) => {
-                  const isUserAnswer = optionIndex === question.userAnswer
-                  const isCorrectAnswer = optionIndex === question.correctAnswer
+                {(() => {
+                  let options: string[] = [];
+                  if (Array.isArray(question.options)) {
+                    options = question.options;
+                  } else if (typeof question.options === 'string') {
+                    try {
+                      options = JSON.parse(question.options);
+                    } catch (e) {
+                      options = [];
+                    }
+                  }
 
-                  return (
-                    <div
-                      key={optionIndex}
-                      className={`p-4 rounded-2xl border-2 transition-all ${
-                        isCorrectAnswer
-                          ? "border-primary bg-primary/10"
-                          : isUserAnswer
-                            ? "border-destructive bg-destructive/10"
-                            : "border-border/50 bg-background/50"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        {isCorrectAnswer && (
-                          <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                        )}
-                        {isUserAnswer && !isCorrectAnswer && (
-                          <XCircle className="h-5 w-5 text-destructive flex-shrink-0" />
-                        )}
-                        <span className={`text-sm flex-1 ${
-                          isCorrectAnswer || isUserAnswer ? "font-semibold" : ""
-                        }`}>
-                          {option}
-                        </span>
+                  return options.map((option, optionIndex) => {
+                    const isUserAnswer = optionIndex === question.userAnswer
+                    const isCorrectAnswer = optionIndex === question.correctAnswer
+
+                    return (
+                      <div
+                        key={optionIndex}
+                        className={`p-4 rounded-2xl border-2 transition-all ${isCorrectAnswer
+                            ? "border-primary bg-primary/10"
+                            : isUserAnswer
+                              ? "border-destructive bg-destructive/10"
+                              : "border-border/50 bg-background/50"
+                          }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {isCorrectAnswer && (
+                            <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                          )}
+                          {isUserAnswer && !isCorrectAnswer && (
+                            <XCircle className="h-5 w-5 text-destructive flex-shrink-0" />
+                          )}
+                          <span className={`text-sm flex-1 ${isCorrectAnswer || isUserAnswer ? "font-semibold" : ""
+                            }`}>
+                            {option}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })
+                })()}
               </div>
 
               {question.explanation && (

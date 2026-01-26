@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,8 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl") || "/"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,7 +37,7 @@ export default function SignInPage() {
       if (result?.error) {
         setError("Email ou mot de passe incorrect")
       } else {
-        router.push("/")
+        router.push(callbackUrl)
       }
     } catch (err) {
       setError("Erreur lors de la connexion")
@@ -113,7 +115,7 @@ export default function SignInPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Vous n'avez pas de compte ?{" "}
-              <Link href="/auth/signup" className="text-primary hover:underline">
+              <Link href={`/auth/signup${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`} className="text-primary hover:underline">
                 Créer un compte
               </Link>
             </p>

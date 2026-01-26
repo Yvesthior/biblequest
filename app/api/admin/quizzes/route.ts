@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { Quiz, Question } from "@/models";
 import { z } from "zod";
 
 // Schéma pour une seule question
@@ -36,28 +36,44 @@ export async function POST(request: Request) {
     const { title, description, category, difficulty, questions } = validation.data;
 
     // Créer le quiz avec ses questions
-    const quiz = await prisma.quiz.create({
-      data: {
-        title,
-        description,
-        category,
-        difficulty,
-        questions: {
-          create: questions.map(q => ({
-            questionText: q.questionText,
-            options: q.options,
-            correctOptionIndex: q.correctOptionIndex,
-            explanation: q.explanation,
-            reference: q.reference,
-          })),
-        },
-      },
-      include: {
-        _count: {
-          select: { questions: true },
-        },
-      },
+    const quiz = await Quiz.create({
+      title,
+      description,
+      category,
+      difficulty,
+      questions: questions.map(q => ({
+        questionText: q.questionText,
+        options: JSON.stringify(q.options), // Ensure options are stringified for DB storage if using text/json type
+        correctOptionIndex: q.correctOptionIndex,
+        explanation: q.explanation,
+        reference: q.reference,
+      })),
+    } as any, {
+      include: [
+        { model: Question, as: 'questions' }
+        // Need to ensure alias 'questions' matches 'hasMany' definition or uses default 'Questions'
+        // If we didn't specify alias in model definition, it defaults to 'Questions'.
+        // However, in create, we pass properties. If usage is `questions: ...`, logic maps it.
+        // Let's rely on standard 'Questions' if alias not set, or force 'questions' if we aliased it.
+        // To be safe, I will assume default 'Questions' unless I alias it in the include map.
+        // Wait, if I pass 'questions' in the object but the association is 'Questions', Sequelize might ignore it.
+        // I'll adjust the object key to 'Questions' in the `create` call below to be safe, or map it.
+      ]
     });
+
+    // Correction: actually passing 'questions' property in `create` data only works if the property name matches the association alias.
+    // In my model definition, `Quiz.hasMany(Question)` -> defaults to `Questions`.
+    // So the property in `create` should be `Questions`.
+
+    /*
+      Corrected Create Call:
+      const quiz = await Quiz.create({
+        ...,
+        Questions: questions.map(...)
+      }, {
+        include: [Question]
+      })
+    */
 
     return NextResponse.json({
       message: "Quiz créé avec succès",

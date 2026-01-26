@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/get-user"
-import { prisma } from "@/lib/prisma"
+import { User } from "@/models"
 
 export async function POST(request: Request) {
   try {
@@ -11,10 +11,18 @@ export async function POST(request: Request) {
     }
 
     // Mettre à jour l'utilisateur
-    const updatedUser = await prisma.user.update({
+    const [updatedRows] = await User.update(
+      { role: "ADMIN" },
+      { where: { email } }
+    )
+
+    if (updatedRows === 0) {
+      return NextResponse.json({ error: "Utilisateur non trouvé" }, { status: 404 })
+    }
+
+    const updatedUser = await User.findOne({
       where: { email },
-      data: { role: "ADMIN" },
-      select: { id: true, name: true, email: true, role: true }
+      attributes: ['id', 'name', 'email', 'role']
     })
 
     return NextResponse.json({

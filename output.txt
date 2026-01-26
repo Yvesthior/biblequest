@@ -1,0 +1,10 @@
+
+Question options type: object
+Question options value: [
+  "Il est tombé dans un champ",
+  "Il s'est pendu",
+  "Il a été tué par des soldats",
+  "Il est mort de maladie"
+]
+Is array?: true
+        

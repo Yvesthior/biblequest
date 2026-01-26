@@ -2,8 +2,8 @@
  * Repository pour les opérations de base de données liées aux QuizAttempt
  */
 
-import { prisma } from "@/lib/prisma";
-import { QuizAttempt, QuizAttemptWithDetails, AttemptAnswer, AnswerSubmission } from "@/shared/types";
+import { QuizAttempt, AttemptAnswer, Quiz, Question } from "@/models";
+import { QuizAttemptWithDetails } from "@/shared/types";
 
 export class QuizAttemptRepository {
   /**
@@ -20,71 +20,99 @@ export class QuizAttemptRepository {
       selectedOption: number;
       isCorrect: boolean;
     }>;
-  }): Promise<QuizAttempt> {
-    return prisma.quizAttempt.create({
-      data: {
-        userId: data.userId,
-        quizId: data.quizId,
-        score: data.score,
-        totalQuestions: data.totalQuestions,
-        answers: data.answers,
-        details: {
-          create: data.details,
-        },
-      },
+  }): Promise<any> {
+
+    // Sequelize allows nested creation if 'AttemptAnswers' is associated.
+    // However, since we might not have set up the alias 'details', we can create the attempt first, then the details.
+    // Or pass 'AttemptAnswers' as the key if that is the default alias.
+    // Let's do it safely with standard creation.
+
+    const attempt = await QuizAttempt.create({
+      userId: data.userId,
+      quizId: data.quizId,
+      score: data.score,
+      totalQuestions: data.totalQuestions,
+      answers: data.answers
     });
+
+    if (data.details && data.details.length > 0) {
+      const detailsData = data.details.map(d => ({
+        ...d,
+        attemptId: attempt.id
+      }));
+      await AttemptAnswer.bulkCreate(detailsData);
+    }
+
+    // Return reloaded attempt or just the instance
+    return attempt;
   }
 
   /**
    * Récupère une tentative par son ID
    */
-  async findById(id: number): Promise<QuizAttemptWithDetails | null> {
-    return prisma.quizAttempt.findUnique({
-      where: { id },
-      include: {
-        quiz: true,
-        details: {
-          include: {
-            question: true,
-          },
-        },
-      },
+  async findById(id: number): Promise<any | null> {
+    const attempt = await QuizAttempt.findByPk(id, {
+      include: [
+        { model: Quiz },
+        {
+          model: AttemptAnswer,
+          include: [{ model: Question }]
+        }
+      ],
     });
+
+    if (!attempt) return null;
+
+    // Map to structure expected by app (details = AttemptAnswers)
+    const json = attempt.toJSON() as any;
+    json.details = json.AttemptAnswers || [];
+    if (json.details && json.details.length > 0) {
+      // Map nested question if needed, Sequelize creates 'Question' property
+      json.details = json.details.map((d: any) => ({
+        ...d,
+        question: d.Question
+      }));
+    }
+
+    return json;
   }
 
   /**
    * Récupère toutes les tentatives d'un utilisateur
    */
-  async findByUserId(userId: string, limit = 10): Promise<QuizAttemptWithDetails[]> {
-    return prisma.quizAttempt.findMany({
+  async findByUserId(userId: string, limit = 10): Promise<any[]> {
+    const attempts = await QuizAttempt.findAll({
       where: { userId },
-      take: limit,
-      orderBy: {
-        completedAt: "desc",
-      },
-      include: {
-        quiz: {
-          select: {
-            id: true,
-            title: true,
-            category: true,
-            difficulty: true,
-          },
-        },
-      },
+      limit: limit,
+      order: [['completedAt', 'DESC']],
+      include: [
+        {
+          model: Quiz,
+          attributes: ['id', 'title', 'category', 'difficulty']
+        }
+      ]
+    });
+
+    // Map 'Quiz' to 'quiz' (lowercase) if necessary, usually toJSON preserves casing of model name unless aliased.
+    // Check if the frontend expects 'quiz'. 
+    // Sequelize model name is 'Quiz', so property is 'Quiz'.
+    // Typically we want lowercase for compat.
+    return attempts.map(a => {
+      const json = a.toJSON() as any;
+      json.quiz = json.Quiz;
+      return json;
     });
   }
 
   /**
    * Récupère toutes les tentatives d'un quiz
    */
-  async findByQuizId(quizId: number): Promise<QuizAttempt[]> {
-    return prisma.quizAttempt.findMany({
+  async findByQuizId(quizId: number): Promise<any[]> {
+    const attempts = await QuizAttempt.findAll({
       where: { quizId },
-      orderBy: {
-        completedAt: "desc",
-      },
+      order: [['completedAt', 'DESC']],
     });
+    return attempts; // Returns instances, safe to return or map toJSON
   }
 
   /**
@@ -95,12 +123,9 @@ export class QuizAttemptRepository {
     averageScore: number;
     bestScore: number;
   }> {
-    const attempts = await prisma.quizAttempt.findMany({
+    const attempts = await QuizAttempt.findAll({
       where: { userId },
-      select: {
-        score: true,
-        totalQuestions: true,
-      },
+      attributes: ['score', 'totalQuestions'],
     });
 
     if (attempts.length === 0) {

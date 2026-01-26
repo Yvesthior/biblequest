@@ -2,9 +2,10 @@
  * Service métier pour les Analytics et Statistiques
  */
 
-import { prisma } from "@/lib/prisma";
+import { User, Quiz, QuizAttempt, Question } from "@/models";
 import { quizAttemptRepository } from "@/shared/repositories/QuizAttemptRepository";
 import { LeaderboardEntry } from "@/shared/types";
+import { Op } from "sequelize";
 
 export class AnalyticsService {
   /**
@@ -17,10 +18,10 @@ export class AnalyticsService {
     totalQuestions: number;
   }> {
     const [totalUsers, totalQuizzes, totalAttempts, totalQuestions] = await Promise.all([
-      prisma.user.count(),
-      prisma.quiz.count(),
-      prisma.quizAttempt.count(),
-      prisma.question.count(),
+      User.count(),
+      Quiz.count(),
+      QuizAttempt.count(),
+      Question.count(),
     ]);
 
     return {
@@ -36,26 +37,21 @@ export class AnalyticsService {
    */
   async getLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
     // Récupérer tous les utilisateurs avec leurs tentatives
-    const users = await prisma.user.findMany({
-      where: {
-        quizAttempts: {
-          some: {},
-        },
-      },
-      include: {
-        quizAttempts: {
-          select: {
-            score: true,
-            totalQuestions: true,
-          },
-        },
-      },
+    // Note: In Sequelize we need to be careful with large datasets. 
+    // Ideally we would aggregate in DB, but keeping logic similar to original for now.
+    const users = await User.findAll({
+      include: [{
+        model: QuizAttempt,
+        as: 'quizAttempts', // Ensure alias matches model definition
+        attributes: ['score', 'totalQuestions']
+      }]
     });
 
     // Calculer les statistiques pour chaque utilisateur
     const leaderboard: LeaderboardEntry[] = users
-      .map((user) => {
-        const attempts = user.quizAttempts;
+      .map((userInstance) => {
+        const user = userInstance.toJSON();
+        const attempts = user.quizAttempts || [];
         const totalAttempts = attempts.length;
 
         if (totalAttempts === 0) {
@@ -63,7 +59,7 @@ export class AnalyticsService {
         }
 
         // Calculer la moyenne des scores en pourcentage
-        const totalScore = attempts.reduce((sum, attempt) => {
+        const totalScore = attempts.reduce((sum: number, attempt: any) => {
           const percentage = (attempt.score / attempt.totalQuestions) * 100;
           return sum + percentage;
         }, 0);
@@ -71,7 +67,7 @@ export class AnalyticsService {
 
         // Trouver le meilleur score
         const bestScore = Math.max(
-          ...attempts.map((attempt) =>
+          ...attempts.map((attempt: any) =>
             Math.round((attempt.score / attempt.totalQuestions) * 100)
           )
         );

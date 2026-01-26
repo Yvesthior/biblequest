@@ -1,116 +1,47 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  username      String?   @unique
-  email         String    @unique
-  password      String
-  emailVerified DateTime?
-  image         String?
-  role          String    @default("USER") // USER, ADMIN
-  accounts      Account[]
-  sessions      Session[]
-  quizAttempts  QuizAttempt[]
-  feedbacks     Feedback[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+model account {
+  id                String  @id
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              user    @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Account_userId_fkey")
+
+  @@unique([provider, providerAccountId], map: "Account_provider_providerAccountId_key")
+  @@index([userId], map: "Account_userId_fkey")
 }
 
-model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
+model attemptanswer {
+  id             Int         @id @default(autoincrement())
+  attemptId      Int
+  questionId     Int
+  selectedOption Int
+  isCorrect      Boolean
+  createdAt      DateTime    @default(now())
+  quizattempt    quizattempt @relation(fields: [attemptId], references: [id], onDelete: Cascade, map: "AttemptAnswer_attemptId_fkey")
+  question       question    @relation(fields: [questionId], references: [id], onDelete: Cascade, map: "AttemptAnswer_questionId_fkey")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
+  @@index([attemptId], map: "AttemptAnswer_attemptId_fkey")
+  @@index([questionId], map: "AttemptAnswer_questionId_fkey")
 }
 
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
-model Quiz {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?  @db.Text
-  category    String?  // "Ancien Testament", "Nouveau Testament", "Général", etc.
-  difficulty  String?  // "Facile", "Moyen", "Difficile"
-  questions   Question[]
-  attempts    QuizAttempt[]
-  feedbacks   Feedback[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Question {
-  id                 Int     @id @default(autoincrement())
-  quizId             Int
-  quiz               Quiz    @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  questionText       String  @db.Text
-  options            Json    // Array of strings: ["Réponse A", "Réponse B"]
-  correctOptionIndex Int
-  explanation        String? @db.Text
-  reference          String? @db.Text
-  attemptAnswers     AttemptAnswer[]
-}
-
-model QuizAttempt {
-  id        Int      @id @default(autoincrement())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  quizId    Int
-  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  score     Int
-  totalQuestions Int
-  answers   String   @db.Text // JSON string of user answers
-  completedAt DateTime @default(now())
-  details   AttemptAnswer[]
-}
-
-model AttemptAnswer {
-  id               Int         @id @default(autoincrement())
-  attemptId        Int
-  attempt          QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  questionId       Int
-  question         Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  selectedOption   Int
-  isCorrect        Boolean
-  createdAt        DateTime    @default(now())
-}
-
-model ErrorLog {
+model errorlog {
   id        Int      @id @default(autoincrement())
   message   String   @db.Text
   stack     String?  @db.Text
@@ -118,17 +49,95 @@ model ErrorLog {
   createdAt DateTime @default(now())
 }
 
-model Feedback {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  message   String   @db.Text
-  status    String   @default("OPEN") // e.g., OPEN, IN_PROGRESS, RESOLVED
+model feedback {
+  id                      String   @id
+  createdAt               DateTime @default(now())
+  message                 String   @db.Text
+  status                  String   @default("OPEN")
+  quizId                  Int
+  userId                  String
+  reportedQuestionIdsJson String   @db.LongText
+  quiz                    quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade, map: "Feedback_quizId_fkey")
+  user                    user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Feedback_userId_fkey")
 
-  quizId Int
-  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  @@index([quizId], map: "Feedback_quizId_fkey")
+  @@index([userId], map: "Feedback_userId_fkey")
+}
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+model question {
+  id                 Int             @id @default(autoincrement())
+  quizId             Int
+  questionText       String          @db.Text
+  options            String          @db.LongText
+  correctOptionIndex Int
+  explanation        String?         @db.Text
+  reference          String?         @db.Text
+  attemptanswer      attemptanswer[]
+  quiz               quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade, map: "Question_quizId_fkey")
 
-  reportedQuestionIdsJson Json
+  @@index([quizId], map: "Question_quizId_fkey")
+}
+
+model quiz {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String?       @db.Text
+  category    String?
+  difficulty  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  feedback    feedback[]
+  question    question[]
+  quizattempt quizattempt[]
+}
+
+model quizattempt {
+  id             Int             @id @default(autoincrement())
+  userId         String
+  quizId         Int
+  score          Int
+  totalQuestions Int
+  answers        String          @db.Text
+  completedAt    DateTime        @default(now())
+  attemptanswer  attemptanswer[]
+  quiz           quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade, map: "QuizAttempt_quizId_fkey")
+  user           user            @relation(fields: [userId], references: [id], onDelete: Cascade, map: "QuizAttempt_userId_fkey")
+
+  @@index([quizId], map: "QuizAttempt_quizId_fkey")
+  @@index([userId], map: "QuizAttempt_userId_fkey")
+}
+
+model session {
+  id           String   @id
+  sessionToken String   @unique(map: "Session_sessionToken_key")
+  userId       String
+  expires      DateTime
+  user         user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Session_userId_fkey")
+
+  @@index([userId], map: "Session_userId_fkey")
+}
+
+model user {
+  id            String        @id
+  name          String?
+  email         String        @unique(map: "User_email_key")
+  password      String
+  emailVerified DateTime?
+  image         String?
+  role          String        @default("USER")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  username      String?       @unique(map: "User_username_key")
+  account       account[]
+  feedback      feedback[]
+  quizattempt   quizattempt[]
+  session       session[]
+}
+
+model verificationtoken {
+  identifier String
+  token      String   @unique(map: "VerificationToken_token_key")
+  expires    DateTime
+
+  @@unique([identifier, token], map: "VerificationToken_identifier_token_key")
 }

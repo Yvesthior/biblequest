@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/get-user"
-import { prisma } from "@/lib/prisma"
+import { Quiz, Question } from "@/models"
 
 interface QuestionData {
   quiz_title: string
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
     let quizIndex = 0
     for (const [quizTitle, questions] of quizMap.entries()) {
       quizIndex++
-      
+
       if (questions.length === 0) {
         errors.push(`Quiz "${quizTitle}" : aucune question valide`)
         logs.push(`⚠️ Quiz ${quizIndex} "${quizTitle}" ignoré : aucune question valide`)
@@ -163,7 +163,7 @@ export async function POST(request: Request) {
 
           return {
             questionText: q.question_text.trim(),
-            options,
+            options: JSON.stringify(options), // Stringified for Sequelize
             correctOptionIndex: q.correct_option_index - 1, // Convertir de 1-based à 0-based
             explanation: q.explanation?.trim() || null,
             reference: q.reference?.trim() || null,
@@ -171,48 +171,47 @@ export async function POST(request: Request) {
         })
 
         // Vérifier si le quiz existe déjà
-        const existingQuiz = await prisma.quiz.findFirst({
+        const existingQuiz = await Quiz.findOne({
           where: { title: quizTitle },
-          include: { questions: true },
+          include: [{ model: Question }]
         })
 
         let quiz
         if (existingQuiz) {
           logs.push(`🔄 Quiz "${quizTitle}" existe déjà, mise à jour...`)
-          logs.push(`🗑️ Suppression de ${existingQuiz.questions.length} ancienne(s) question(s)`)
+          const oldQuestionsCount = existingQuiz.dataValues.Questions ? existingQuiz.dataValues.Questions.length : 0;
+          logs.push(`🗑️ Suppression de ${oldQuestionsCount} ancienne(s) question(s)`)
+
           // Supprimer les anciennes questions
-          await prisma.question.deleteMany({
+          await Question.destroy({
             where: { quizId: existingQuiz.id },
           })
 
           // Mettre à jour le quiz
-          quiz = await prisma.quiz.update({
-            where: { id: existingQuiz.id },
-            data: {
-              title: quizTitle,
-              description: quizDescription,
-              category: quizCategory,
-              difficulty: quizDifficulty,
-              questions: {
-                create: validQuestions,
-              },
-            },
+          quiz = await existingQuiz.update({
+            title: quizTitle,
+            description: quizDescription,
+            category: quizCategory,
+            difficulty: quizDifficulty,
           })
+
+          const newQuestions = validQuestions.map(q => ({ ...q, quizId: quiz.id }));
+          await Question.bulkCreate(newQuestions);
+
           logs.push(`✅ Quiz "${quizTitle}" mis à jour avec succès (${validQuestions.length} question(s))`)
         } else {
           logs.push(`✨ Création du nouveau quiz "${quizTitle}"...`)
           // Créer un nouveau quiz
-          quiz = await prisma.quiz.create({
-            data: {
-              title: quizTitle,
-              description: quizDescription,
-              category: quizCategory,
-              difficulty: quizDifficulty,
-              questions: {
-                create: validQuestions,
-              },
-            },
+          quiz = await Quiz.create({
+            title: quizTitle,
+            description: quizDescription,
+            category: quizCategory,
+            difficulty: quizDifficulty,
           })
+
+          const newQuestions = validQuestions.map(q => ({ ...q, quizId: quiz.id }));
+          await Question.bulkCreate(newQuestions);
+
           logs.push(`✅ Quiz "${quizTitle}" créé avec succès (${validQuestions.length} question(s))`)
         }
 

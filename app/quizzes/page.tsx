@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma"
+import { Quiz, Question, QuizAttempt } from "@/models"
+import { Op, Sequelize } from "sequelize"
 import { QuizListWithFilters } from "@/components/quiz-list-with-filters"
 import { getCurrentUser } from "@/lib/get-user"
 
@@ -14,7 +15,7 @@ interface PageProps {
 
 async function getQuizzes(params: { page: number, limit: number, category?: string, difficulty?: string, search?: string }, userId?: string) {
   const { page, limit, category, difficulty, search } = params
-  const skip = (page - 1) * limit
+  const offset = (page - 1) * limit
 
   const where: any = {}
 
@@ -27,56 +28,82 @@ async function getQuizzes(params: { page: number, limit: number, category?: stri
   }
 
   if (search) {
-    where.OR = [
-      { title: { contains: search } },
-      { description: { contains: search } },
+    where[Op.or] = [
+      { title: { [Op.like]: `%${search}%` } },
+      { description: { [Op.like]: `%${search}%` } },
     ]
   }
 
-  const [total, quizzes] = await prisma.$transaction([
-    prisma.quiz.count({ where }),
-    prisma.quiz.findMany({
-      where,
-      take: limit,
-      skip: skip,
-      orderBy: {
-        createdAt: "desc",
+  const { count, rows } = await Quiz.findAndCountAll({
+    where,
+    limit,
+    offset,
+    order: [['createdAt', 'DESC']],
+    attributes: {
+      include: [
+        [Sequelize.fn("COUNT", Sequelize.col("Questions.id")), "questionCount"]
+      ],
+    },
+    include: [
+      {
+        model: Question,
+        attributes: [],
+        duplicating: false,
       },
-      include: {
-        _count: {
-          select: { questions: true },
-        },
-        attempts: userId ? {
-          where: { userId: userId },
-          select: { id: true },
-        } : false,
-      },
-    }),
-  ])
+      // Note: Including 'attempts' conditionally is tricky in Sequelize findAndCountAll with grouping.
+      // We often fetch attempts separately or use a subquery if we just need existence.
+      // Here we map it afterwards if possible, or include it. 
+      // Since `findAndCountAll` with grouping behaves differently, let's keep it simple:
+      // We will separate the concern: fetch quizzes, then check for attempts if userId is present.
+    ],
+    group: ['Quiz.id'],
+    subQuery: false,
+  });
 
-  const quizzesWithCompletion = quizzes.map(quiz => ({
-    ...quiz,
-    isCompleted: quiz.attempts && quiz.attempts.length > 0,
-  }))
+  // Calculate distinct total - findAndCountAll with group returns an array of counts
+  // We need a separate count query or interpret the result
+  const total = Array.isArray(count) ? count.length : count; // In recent Sequelize versions, with group, count is array of objects
+
+  // Now for each quiz, check if the user completed it.
+  // We can do this with a separate query to QuizAttempt
+  const quizIds = rows.map(q => q.id);
+  const userAttempts = userId ? await QuizAttempt.findAll({
+    where: {
+      quizId: { [Op.in]: quizIds },
+      userId: userId
+    },
+    attributes: ['quizId']
+  }) : [];
+
+  const attemptMap = new Set(userAttempts.map(a => a.quizId));
+
+  const quizzesWithCompletion = rows.map(q => {
+    const quiz = q.toJSON() as any;
+    return {
+      ...quiz,
+      isCompleted: attemptMap.has(quiz.id),
+      _count: {
+        questions: quiz.questionCount || 0
+      }
+    };
+  });
 
   return {
     quizzes: quizzesWithCompletion,
-    total
+    total: total as number // Fix type assertion if needed
   }
 }
 
 async function getMetadata() {
-  const categories = await prisma.quiz.findMany({
-    select: { category: true },
-    distinct: ['category'],
-    where: { category: { not: null } }
-  }).then(res => res.map(r => r.category).filter(Boolean) as string[])
+  const categories = await Quiz.findAll({
+    attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('category')), 'category']],
+    where: { category: { [Op.ne]: null } }
+  }).then(res => res.map(r => r.get('category')).filter(Boolean) as string[])
 
-  const difficulties = await prisma.quiz.findMany({
-    select: { difficulty: true },
-    distinct: ['difficulty'],
-    where: { difficulty: { not: null } }
-  }).then(res => res.map(r => r.difficulty).filter(Boolean) as string[])
+  const difficulties = await Quiz.findAll({
+    attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('difficulty')), 'difficulty']],
+    where: { difficulty: { [Op.ne]: null } }
+  }).then(res => res.map(r => r.get('difficulty')).filter(Boolean) as string[])
 
   return { categories, difficulties }
 }
@@ -89,7 +116,7 @@ export const metadata = {
 export default async function QuizzesPage({ searchParams }: PageProps) {
   const user = await getCurrentUser()
   const resolvedSearchParams = await searchParams
-  
+
   const page = Number(resolvedSearchParams.page) || 1
   const limit = Number(resolvedSearchParams.limit) || 12
   const category = resolvedSearchParams.category
@@ -114,8 +141,8 @@ export default async function QuizzesPage({ searchParams }: PageProps) {
           </div>
 
           {/* Quiz List with Filters */}
-          <QuizListWithFilters 
-            quizzes={quizzes} 
+          <QuizListWithFilters
+            quizzes={quizzes}
             categories={categories}
             difficulties={difficulties}
             meta={{

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/get-user"
-import { prisma } from "@/lib/prisma"
+import { Feedback, Quiz, User } from "@/models"
 
 export async function GET() {
   try {
@@ -10,23 +10,20 @@ export async function GET() {
       return NextResponse.json({ error: "Non autorisé" }, { status: 403 })
     }
 
-    const feedbacks = await prisma.feedback.findMany({
-      include: {
-        quiz: {
-          select: {
-            title: true
-          }
+    const feedbacks = await Feedback.findAll({
+      include: [
+        {
+          model: Quiz,
+          attributes: ['title']
         },
-        user: {
-          select: {
-            name: true,
-            email: true
-          }
+        {
+          model: User,
+          attributes: ['name', 'email']
         }
-      },
-      orderBy: {
-        createdAt: "desc"
-      }
+      ],
+      order: [
+        ['createdAt', 'DESC']
+      ]
     })
 
     return NextResponse.json(feedbacks)
