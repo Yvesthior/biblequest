@@ -21,6 +21,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       include: [
         {
           model: Quiz,
+          as: 'quiz',
           include: [
             {
               model: Question,
@@ -46,7 +47,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     // Determine if it's the old format (number[]) or new format (AnswerSubmission[])
     const isLegacyFormat = Array.isArray(storedAnswers) && typeof storedAnswers[0] === 'number'
 
-    const quizQuestions = attempt.Quiz?.Questions || [];
+    const quizQuestions = attempt.quiz?.Questions || [];
 
     const results = quizQuestions.map((question: any, index: number) => {
       let userAnswer = -1
@@ -79,7 +80,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       score: attempt.score,
       totalQuestions: attempt.totalQuestions,
       completedAt: attempt.completedAt,
-      quizTitle: attempt.Quiz?.title,
+      quizTitle: attempt.quiz?.title,
       results,
     })
   } catch (error) {

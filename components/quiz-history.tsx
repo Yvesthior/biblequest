@@ -52,7 +52,7 @@ export function QuizHistory({ attempts, questions }: QuizHistoryProps) {
         {attempts.map((attempt, index) => {
           const parsedAnswers = JSON.parse(attempt.answers)
           const percentage = Math.round((attempt.score / attempt.totalQuestions) * 100)
-          
+
           // Determine if it's the old format (number[]) or new format (AnswerSubmission[])
           const isLegacyFormat = Array.isArray(parsedAnswers) && typeof parsedAnswers[0] === 'number'
 
@@ -86,22 +86,29 @@ export function QuizHistory({ attempts, questions }: QuizHistoryProps) {
                   <div className="space-y-4">
                     {questions.map((question, qIndex) => {
                       let userAnswerIndex = -1
-                      
+
                       if (isLegacyFormat) {
-                         // Fallback for legacy data: use array index
-                         userAnswerIndex = parsedAnswers[qIndex]
+                        // Fallback for legacy data: use array index
+                        userAnswerIndex = parsedAnswers[qIndex]
                       } else {
-                         // Robust: use question ID
-                         const submission = parsedAnswers.find((a: any) => a.questionId === question.id)
-                         userAnswerIndex = submission ? submission.answerIndex : -1
+                        // Robust: use question ID
+                        const submission = parsedAnswers.find((a: any) => a.questionId === question.id)
+                        userAnswerIndex = submission ? submission.answerIndex : -1
                       }
 
                       const isCorrect = userAnswerIndex === question.correctOptionIndex
-                      
+
                       // Ensure options is an array
-                      const options = Array.isArray(question.options) 
-                        ? question.options as string[] 
-                        : JSON.parse(JSON.stringify(question.options)) as string[]
+                      let options: string[] = [];
+                      if (Array.isArray(question.options)) {
+                        options = question.options;
+                      } else if (typeof question.options === 'string') {
+                        try {
+                          options = JSON.parse(question.options);
+                        } catch (e) {
+                          options = [];
+                        }
+                      }
 
                       return (
                         <div key={question.id} className={`p-4 rounded-xl border ${isCorrect ? "border-green-500/20 bg-green-500/5" : "border-red-500/20 bg-red-500/5"}`}>
@@ -117,7 +124,7 @@ export function QuizHistory({ attempts, questions }: QuizHistoryProps) {
                                 {options.map((option, oIndex) => {
                                   const isSelected = userAnswerIndex === oIndex
                                   const isTheCorrectAnswer = question.correctOptionIndex === oIndex
-                                  
+
                                   let className = "p-2 rounded-lg text-sm border border-transparent "
                                   if (isTheCorrectAnswer) {
                                     className += "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800"

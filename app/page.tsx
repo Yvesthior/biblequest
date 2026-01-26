@@ -70,18 +70,18 @@ export default async function HomePage() {
             Chaque question est accompagnée de références et d'explications détaillées.
           </p>
 
-          <div className="flex flex-wrap gap-3 justify-center mb-8">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-card">
-              <Trophy className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Scores détaillés</span>
+          <div className="flex flex-wrap gap-2 justify-center mb-8 px-2">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card">
+              <Trophy className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs sm:text-sm font-medium">Scores détaillés</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-card">
-              <Zap className="h-4 w-4 text-accent" />
-              <span className="text-sm font-medium">Apprentissage rapide</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card">
+              <Zap className="h-3.5 w-3.5 text-accent" />
+              <span className="text-xs sm:text-sm font-medium">Apprentissage rapide</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full glass-card">
-              <BookOpen className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Références bibliques</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass-card">
+              <BookOpen className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs sm:text-sm font-medium">Références bibliques</span>
             </div>
           </div>
 

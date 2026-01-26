@@ -52,6 +52,14 @@ export default function ResultsPage() {
   const { width, height } = useWindowSize()
 
   useEffect(() => {
+    // Force clean local storage on results page to prevent stale data
+    // This is redundant but ensures safety if the submit cleanup failed
+    if (params.id) {
+      localStorage.removeItem(`quiz_progress_${params.id}`)
+    }
+  }, [params.id])
+
+  useEffect(() => {
     setShareUrl(window.location.href)
 
     if (status === "unauthenticated") {

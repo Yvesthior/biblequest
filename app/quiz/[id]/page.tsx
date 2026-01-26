@@ -309,22 +309,36 @@ export default function QuizPage() {
             </Button>
 
             {/* Progress dots - scrollable on very small screens */}
-            <div className="flex-1 flex justify-center overflow-hidden">
-              <div className="flex gap-1.5 px-2 overflow-x-auto no-scrollbar py-2 max-w-full justify-start sm:justify-center">
-                {quiz.questions.map((q, index) => (
-                  <div
-                    key={index}
-                    className={`
-                    h-2 rounded-full transition-all duration-300 flex-shrink-0
-                    ${answers[q.id] !== undefined
-                        ? "bg-primary w-6"
-                        : index === currentQuestionIndex
-                          ? "bg-primary/50 w-4"
-                          : "bg-muted w-2"
-                      }
-                  `}
-                  />
-                ))}
+            {/* Question indicators - Grid layout without scroll */}
+            <div className="flex-1 px-2">
+              <div className="flex flex-wrap gap-2 justify-center max-h-24 overflow-y-auto pr-1">
+                {quiz.questions.map((q, index) => {
+                  const isAnswered = answers[q.id] !== undefined;
+                  const isCurrent = index === currentQuestionIndex;
+
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        // Optional: Allow navigation only to answered or current or next?
+                        // User asked to navigate, so we allow it.
+                        setCurrentQuestionIndex(index);
+                      }}
+                      className={`
+                        w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all
+                        ${isCurrent
+                          ? "bg-primary text-primary-foreground ring-2 ring-offset-2 ring-primary"
+                          : isAnswered
+                            ? "bg-primary/20 text-primary hover:bg-primary/30"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }
+                      `}
+                      aria-label={`Aller à la question ${index + 1}`}
+                    >
+                      {index + 1}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
