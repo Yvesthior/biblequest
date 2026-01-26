@@ -41,7 +41,7 @@ echo -e "${BLUE}🚀 Gestion du processus PM2 (Port 3010)...${NC}"
 if pm2 list | grep -q "bible-quiz-app"; then
     pm2 reload bible-quiz-app
 else
-    pm2 start ecosystem.config.js
+    pm2 start ecosystem.config.cjs
     pm2 save
     # On suppose que pm2 startup a déjà été fait sur le serveur, sinon décommenter :
     # pm2 startup
