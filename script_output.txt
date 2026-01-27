@@ -1,0 +1,12 @@
+[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+Connecting to database... mysql://root@lo...
+Database connection established successfully.
+Error exporting quizzes: EagerLoadingError [SequelizeEagerLoadingError]: Question is associated to Quiz using an alias. You've included an alias (questions), but it does not match the alias(es) defined in your association (Questions).
+    at Function._getIncludedAssociation (C:\Users\yvest\Documents\PERSO-2025\bible-master\bible-quiz-app\node_modules\sequelize\src\model.js:751:15)
+    at Function._validateIncludedElement (C:\Users\yvest\Documents\PERSO-2025\bible-master\bible-quiz-app\node_modules\sequelize\src\model.js:646:53)
+    at <anonymous> (C:\Users\yvest\Documents\PERSO-2025\bible-master\bible-quiz-app\node_modules\sequelize\src\model.js:542:37)
+    at Array.map (<anonymous>)
+    at Function._validateIncludedElements (C:\Users\yvest\Documents\PERSO-2025\bible-master\bible-quiz-app\node_modules\sequelize\src\model.js:537:39)
+    at Function.findAll (C:\Users\yvest\Documents\PERSO-2025\bible-master\bible-quiz-app\node_modules\sequelize\src\model.js:1794:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async exportQuizzes (C:\Users\yvest\Documents\PERSO-2025\bible-master\bible-quiz-app\scripts\export-quizzes.ts:43:25)

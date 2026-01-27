@@ -1,0 +1,7 @@
+[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+Connecting to database... mysql://root@lo...
+Database connection established successfully.
+Found 30 quizzes.
+Error exporting quizzes: TypeError: Cannot read properties of undefined (reading '0')
+    at exportQuizzes (C:\Users\yvest\Documents\PERSO-2025\bible-master\bible-quiz-app\scripts\export-quizzes.ts:75:31)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)

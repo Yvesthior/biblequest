@@ -1,0 +1,36 @@
+[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
+Connecting to database... mysql://root@lo...
+Database connection established successfully.
+Target output directory: C:\Users\yvest\Documents\PERSO-2025\bible-master\quizzes
+Found 30 quizzes.
+Exported les_d_buts_de_la_gen_se_5.json
+Exported l_arche_de_no__6.json
+Exported les_paraboles_de_j_sus_7.json
+Exported les_ap_tres_8.json
+Exported au_commencement_9.json
+Exported symboles_et_cons_quences_10.json
+Exported noms_et_nombres_11.json
+Exported les_b_atitudes_et_la_pri_re_12.json
+Exported la_loi_nouvelle_13.json
+Exported la_justice_du_royaume_14.json
+Exported la_naissance_de_j_sus_15.json
+Exported le_bapt_me_et_la_tentation_19.json
+Exported les_miracles_de_galil_e_20.json
+Exported l_appel_des_disciples_21.json
+Exported instructions_aux_ap_tres_22.json
+Exported les_paraboles_c_l_bres_23.json
+Exported le_royaume_des_cieux_24.json
+Exported conflits_et_r_v_lations_25.json
+Exported la_multiplication_des_pains_26.json
+Exported la_confession_de_pierre_27.json
+Exported la_vie_de_l__glise_28.json
+Exported l_entr_e___j_rusalem_29.json
+Exported paraboles___j_rusalem_30.json
+Exported controverses_avec_les_pharisiens_31.json
+Exported les_dix_vierges_32.json
+Exported les_talents_et_le_jugement_33.json
+Exported signes_de_la_fin_34.json
+Exported la_passion_du_christ_35.json
+Exported geths_mani_et_le_proc_s_36.json
+Exported la_grande_commission_37.json
+Export completed successfully.

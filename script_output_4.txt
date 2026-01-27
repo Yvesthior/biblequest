@@ -1,0 +1,35 @@
+[dotenv@17.2.3] injecting env (10) from .env -- tip: ÔÜÖ´©Å  load multiple .env files with { path: ['.env.local', '.env'] }
+Connecting to database... mysql://root@lo...
+Database connection established successfully.
+Found 30 quizzes.
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Export completed successfully.

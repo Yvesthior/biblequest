@@ -1,0 +1,163 @@
+[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒöÉ prevent committing .env to code: https://dotenvx.com/precommit
+Connecting to database... mysql://root@lo...
+Database connection established successfully.
+Found 30 quizzes.
+First quiz object keys: [
+  'dataValues',
+  '_previousDataValues',
+  'uniqno',
+  '_changed',
+  '_options',
+  'isNewRecord',
+  'Questions',
+  'id',
+  'title',
+  'description',
+  'category',
+  'difficulty',
+  'createdAt',
+  'updatedAt'
+]
+First quiz plain: {
+  id: 5,
+  title: 'Les D├®buts de la Gen├¿se',
+  description: 'Un quiz sur les premiers chapitres de la Gen├¿se.',
+  category: 'Ancien Testament',
+  difficulty: 'Facile',
+  createdAt: 2025-10-31T20:26:51.000Z,
+  updatedAt: 2025-10-31T20:26:51.000Z,
+  Questions: [
+    {
+      id: 13,
+      quizId: 5,
+      questionText: 'Combien de jours a dur├® la cr├®ation du monde selon le premier r├®cit de la Gen├¿se ?',
+      options: '["5 jours", "6 jours", "7 jours", "12 jours"]',
+      correctOptionIndex: 1,
+      explanation: 'Dieu cr├®a le monde en 6 jours et se reposa le septi├¿me.',
+      reference: 'Gen├¿se 1:31 - 2:2'
+    },
+    {
+      id: 14,
+      quizId: 5,
+      questionText: 'Quel est le nom du premier homme cr├®├® par Dieu ?',
+      options: '["Abel", "Ca├»n", "Adam", "No├®"]',
+      correctOptionIndex: 2,
+      explanation: "Adam fut le premier homme, cr├®├® ├á l'image de Dieu.",
+      reference: 'Gen├¿se 1:27'
+    },
+    {
+      id: 15,
+      quizId: 5,
+      questionText: "Vrai ou Faux : Le serpent dans le jardin d'├ëden ├®tait un simple animal.",
+      options: '["Vrai", "Faux"]',
+      correctOptionIndex: 1,
+      explanation: "Le serpent est d├®crit comme 'le plus rus├® de tous les animaux des champs', et symbolise la tentation et le mal.",
+      reference: 'Gen├¿se 3:1'
+    },
+    {
+      id: 16,
+      quizId: 5,
+      questionText: "Quel fruit Adam et ├êve ont-ils mang├® dans le jardin d'├ëden ?",
+      options: `["Le fruit de l'arbre de la connaissance du bien et du mal", "Une pomme rouge", "Une figue", "Un raisin"]`,
+      correctOptionIndex: 0,
+      explanation: "La Bible ne pr├®cise pas le type de fruit, mais parle de l'arbre de la connaissance du bien et du mal.",
+      reference: 'Gen├¿se 2:17'
+    },
+    {
+      id: 17,
+      quizId: 5,
+      questionText: "Qui ├®taient les deux fils d'Adam et ├êve mentionn├®s en premier ?",
+      options: '["Ca├»n et Abel", "Seth et Ca├»n", "Abel et Seth", "No├® et Abraham"]',
+      correctOptionIndex: 0,
+      explanation: "Ca├»n et Abel furent les deux premiers fils d'Adam et ├êve.",
+      reference: 'Gen├¿se 4:1-2'
+    }
+  ]
+}
+First quiz JSON: {
+  "id": 5,
+  "title": "Les D├®buts de la Gen├¿se",
+  "description": "Un quiz sur les premiers chapitres de la Gen├¿se.",
+  "category": "Ancien Testament",
+  "difficulty": "Facile",
+  "createdAt": "2025-10-31T20:26:51.000Z",
+  "updatedAt": "2025-10-31T20:26:51.000Z",
+  "Questions": [
+    {
+      "id": 13,
+      "quizId": 5,
+      "questionText": "Combien de jours a dur├® la cr├®ation du monde selon le premier r├®cit de la Gen├¿se ?",
+      "options": "[\"5 jours\", \"6 jours\", \"7 jours\", \"12 jours\"]",
+      "correctOptionIndex": 1,
+      "explanation": "Dieu cr├®a le monde en 6 jours et se reposa le septi├¿me.",
+      "reference": "Gen├¿se 1:31 - 2:2"
+    },
+    {
+      "id": 14,
+      "quizId": 5,
+      "questionText": "Quel est le nom du premier homme cr├®├® par Dieu ?",
+      "options": "[\"Abel\", \"Ca├»n\", \"Adam\", \"No├®\"]",
+      "correctOptionIndex": 2,
+      "explanation": "Adam fut le premier homme, cr├®├® ├á l'image de Dieu.",
+      "reference": "Gen├¿se 1:27"
+    },
+    {
+      "id": 15,
+      "quizId": 5,
+      "questionText": "Vrai ou Faux : Le serpent dans le jardin d'├ëden ├®tait un simple animal.",
+      "options": "[\"Vrai\", \"Faux\"]",
+      "correctOptionIndex": 1,
+      "explanation": "Le serpent est d├®crit comme 'le plus rus├® de tous les animaux des champs', et symbolise la tentation et le mal.",
+      "reference": "Gen├¿se 3:1"
+    },
+    {
+      "id": 16,
+      "quizId": 5,
+      "questionText": "Quel fruit Adam et ├êve ont-ils mang├® dans le jardin d'├ëden ?",
+      "options": "[\"Le fruit de l'arbre de la connaissance du bien et du mal\", \"Une pomme rouge\", \"Une figue\", \"Un raisin\"]",
+      "correctOptionIndex": 0,
+      "explanation": "La Bible ne pr├®cise pas le type de fruit, mais parle de l'arbre de la connaissance du bien et du mal.",
+      "reference": "Gen├¿se 2:17"
+    },
+    {
+      "id": 17,
+      "quizId": 5,
+      "questionText": "Qui ├®taient les deux fils d'Adam et ├êve mentionn├®s en premier ?",
+      "options": "[\"Ca├»n et Abel\", \"Seth et Ca├»n\", \"Abel et Seth\", \"No├® et Abraham\"]",
+      "correctOptionIndex": 0,
+      "explanation": "Ca├»n et Abel furent les deux premiers fils d'Adam et ├êve.",
+      "reference": "Gen├¿se 4:1-2"
+    }
+  ]
+}
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Exported quiz_undefined_undefined.json
+Export completed successfully.
