@@ -32,7 +32,7 @@ async function getAdminStats() {
           [
             Sequelize.literal(`(
               SELECT COUNT(*)
-              FROM quiz_attempt AS attempts
+              FROM quizattempt AS attempts
               WHERE attempts.quizId = Quiz.id
             )`),
             'attemptsCount'
